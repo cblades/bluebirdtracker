@@ -30,6 +30,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".BoxListActivity" />
         </activity>
+
+        <provider
+            android:name="bluebird.tracking.data.DataProvider"
+            android:authorities="bluebird.tracking.data"
+            android:enabled="true"
+            android:exported="true" >
+        </provider>
     </application>
 
 </manifest>
