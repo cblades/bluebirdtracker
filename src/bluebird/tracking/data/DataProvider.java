@@ -1,13 +1,15 @@
 package bluebird.tracking.data;
 
-import bluebird.tracking.enums.LogTags;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Log;
+import bluebird.tracking.enums.LogTags;
 
 public class DataProvider extends ContentProvider {
 	public static final String AUTHORITY = "bluebird.tracking.data";
@@ -68,6 +70,7 @@ public class DataProvider extends ContentProvider {
 		String table = "";
 		String where = null;
 		String sort = null;
+		
 		switch(uriMatcher.match(uri)){
 		case BOXES:
 			table = "Box";
@@ -95,45 +98,121 @@ public class DataProvider extends ContentProvider {
 			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad query request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
+		
 		queryBuilder.setTables(table);
 		if(where != null)
 			queryBuilder.appendWhere(where);
-		Cursor c = queryBuilder.query(db.getReadableDatabase(), projection, selection, selectionArgs, null, null, sort);
-		c.setNotificationUri(getContext().getContentResolver(), uri);
-		return c;
+		
+		try{
+			Cursor c = queryBuilder.query(db.getReadableDatabase(), projection, selection, selectionArgs, null, null, sort);
+			c.setNotificationUri(getContext().getContentResolver(), uri);
+			return c;
+		} catch(SQLiteException e){
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			throw new RuntimeException("Error opening database connection", e);
+		}
 	}
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
+		String table = "";
+		
 		switch(uriMatcher.match(uri)){
 		case BOXES:
+			table = "Box";
 			break;
 		case OBSERVATIONS:
-			break;
-		case OBSERVATIONS_BOX_ID:
-			break;
-		case BOX_ID:
-			break;
-		case OBSERVATIONS_ID:
+			table = "Observation";
 			break;
 		default:
 			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad insert request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
-		return null;
+		
+		try{
+			SQLiteDatabase writableDB = db.getWritableDatabase();
+			long newRowID = (int)writableDB.insert(table, null, values);
+		
+			if(newRowID < -1)
+				throw new RuntimeException("An error occured inserting into the database");
+		
+			Uri newUri = Uri.parse("content://" + AUTHORITY + table.toLowerCase() + "/" + Long.toString(newRowID));
+			getContext().getContentResolver().notifyChange(newUri, null);
+			return newUri;
+		} catch(SQLiteException e){
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			throw new RuntimeException("Error opening database connection", e);
+		}
 	}
 	
 	@Override
-	public int update(Uri uri, ContentValues values, String selection,
-			String[] selectionArgs) {
-		// TODO: Implement this to handle requests to update one or more rows.
-		throw new UnsupportedOperationException("Not yet implemented");
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+		String table = "";
+		
+		switch(uriMatcher.match(uri)){
+		case BOXES:
+			table = "Box";
+			break;
+		case OBSERVATIONS:
+			table = "Observation";
+			break;
+		case BOX_ID:
+			table = "Box";
+			selection = "_ID = ?";
+			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
+			break;
+		case OBSERVATIONS_ID:
+			table = "Observation";
+			selection = "_ID = ?";
+			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
+			break;
+		default:
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad update request for " + uri.toString());
+			throw new IllegalArgumentException("Unknown URI " + uri.toString());
+		}
+		
+		try{
+			SQLiteDatabase writableDB = db.getWritableDatabase();
+			return writableDB.update(table, values, selection, selectionArgs);
+		} catch(SQLiteException e){
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			throw new RuntimeException("Error opening database connection", e);
+		}
 	}
 	
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		// Implement this to handle requests to delete one or more rows.
-		throw new UnsupportedOperationException("Not yet implemented");
+		String table = "";
+		
+		switch(uriMatcher.match(uri)){
+		case BOXES:
+			table = "Box";
+			break;
+		case OBSERVATIONS:
+			table = "Observation";
+			break;
+		case BOX_ID:
+			table = "Box";
+			selection = "_ID = ?";
+			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
+			break;
+		case OBSERVATIONS_ID:
+			table = "Observation";
+			selection = "_ID = ?";
+			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
+			break;
+		default:
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad delete request for " + uri.toString());
+			throw new IllegalArgumentException("Unknown URI " + uri.toString());
+		}
+		
+		try{
+			SQLiteDatabase writableDB = db.getWritableDatabase();
+			return writableDB.delete(table, selection, selectionArgs);
+		} catch(SQLiteException e){
+			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			throw new RuntimeException("Error opening database connection", e);
+		}
 	}
 	
 	@Override
