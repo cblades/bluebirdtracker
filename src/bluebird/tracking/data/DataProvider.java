@@ -11,16 +11,29 @@ import android.net.Uri;
 import android.util.Log;
 import bluebird.tracking.enums.LogTags;
 
+/*
+ * A ContentProvider used to query, update, insert into and delete from our database using URI's
+ * http://developer.android.com/guide/topics/providers/content-providers.html
+ * 
+ * @author Matthew Stratton
+ * @version 1.0 May 31, 2013
+ */
 public class DataProvider extends ContentProvider {
+	/* The symbolic name of the entire content provider */
 	public static final String AUTHORITY = "bluebird.tracking.data";
+	
+	/* Used to match URI requests we get to request we know we can handle */
+	private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+	
+	/* DatabaseHelper for accessing our database */
+	private DatabaseHelper db;
+	
 	private static final int BOXES = 100;
 	private static final int BOX_ID = 101;
 	private static final int OBSERVATIONS = 102;
 	private static final int OBSERVATIONS_ID = 103;
 	private static final int OBSERVATIONS_BOX_ID = 104;
-	private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 	
-	private DatabaseHelper db;
 	
 	static{
 		uriMatcher.addURI(AUTHORITY, "boxes", BOXES);
@@ -32,12 +45,26 @@ public class DataProvider extends ContentProvider {
 	
 	public DataProvider() {}
 	
+	/* 
+	 * @see android.content.ContentProvider#onCreate()
+	 * 
+	 * Called by system when creating the content provider
+	 * 
+	 * @return	Boolean value indicating success or failure or creation
+	 */
 	@Override
 	public boolean onCreate() {
 		db = new DatabaseHelper(getContext());		
 		return true;
 	}
 
+	/*
+	 * @see android.content.ContentProvider#getType(android.net.Uri)
+	 * 
+	 * Tells users the type of data returned from a URI request
+	 * 
+	 * @return	String indicating type of data in a standard format
+	 */
 	@Override
 	public String getType(Uri uri){
 		String type = "";
@@ -64,6 +91,19 @@ public class DataProvider extends ContentProvider {
 		return type;
 	}
 
+	/*
+	 * @see android.content.ContentProvider#query(android.net.Uri, java.lang.String[], java.lang.String, java.lang.String[], java.lang.String)
+	 * 
+	 * Query the database based on a given URI and selection parameters
+	 * 
+	 * @param uri			URI requested
+	 * @param projection	The columns of data the user wants
+	 * @param selection		The where clause requested ("_ID = ? and name = ? ...")
+	 * @param selectionArgs	Strings to replace ? with in selection (["1", "Bob" ...])
+	 * @param sortOrder		Order in which to return the data ("_ID DESC")
+	 * 
+	 * @return 				Cursor object that can be used to retrieve data matching the query 
+	 */
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
@@ -113,6 +153,16 @@ public class DataProvider extends ContentProvider {
 		}
 	}
 
+	/*
+	 * @see android.content.ContentProvider#insert(android.net.Uri, android.content.ContentValues)
+	 * 
+	 * Inserting the given data into our database based on a URI.
+	 * 
+	 * @param uri		URI requested, the table to insert into
+	 * @param values	Data values to insert into the database
+	 * 
+	 * @return 			URI of newly created entry
+	 */
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		String table = "";
@@ -136,8 +186,8 @@ public class DataProvider extends ContentProvider {
 			if(newRowID < -1)
 				throw new RuntimeException("An error occured inserting into the database");
 		
-			Uri newUri = Uri.parse("content://" + AUTHORITY + table.toLowerCase() + "/" + Long.toString(newRowID));
-			getContext().getContentResolver().notifyChange(newUri, null);
+			Uri newUri = Uri.parse("content://" + AUTHORITY + table.toLowerCase() + "/" + Long.toString(newRowID)); //create URI of new entry
+			getContext().getContentResolver().notifyChange(newUri, null); //notify any listeners of change to database
 			return newUri;
 		} catch(SQLiteException e){
 			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
@@ -145,6 +195,18 @@ public class DataProvider extends ContentProvider {
 		}
 	}
 	
+	/*
+	 * @see android.content.ContentProvider#update(android.net.Uri, android.content.ContentValues, java.lang.String, java.lang.String[])
+	 * 
+	 * Update the database given a URI, selection parameters and new data values
+	 * 
+	 * @param uri				URI requested, the table or entity to update
+	 * @param values			New data values to set
+	 * @param selection			The where clause requested ("_ID = ? and name = ? ...")
+	 * @param selectionArgs		Strings to replace ? with in selection (["1", "Bob" ...])
+	 * 
+	 * @return 					Number of rows affected
+	 */
 	@Override
 	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		String table = "";
@@ -158,11 +220,13 @@ public class DataProvider extends ContentProvider {
 			break;
 		case BOX_ID:
 			table = "Box";
-			selection = "_ID = ?";
+			//ignore the user's selection clause and values, the URI specifies the where clause we want
+			selection = "_ID = ?"; 
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		case OBSERVATIONS_ID:
 			table = "Observation";
+			//ignore the user's selection clause and values, the URI specifies the where clause we want
 			selection = "_ID = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
@@ -173,13 +237,24 @@ public class DataProvider extends ContentProvider {
 		
 		try{
 			SQLiteDatabase writableDB = db.getWritableDatabase();
-			return writableDB.update(table, values, selection, selectionArgs);
+			int changed = writableDB.update(table, values, selection, selectionArgs);
+			getContext().getContentResolver().notifyChange(uri, null); //notify any listeners of change to database
+			return changed;
 		} catch(SQLiteException e){
 			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}
 	
+	/*
+	 * @see android.content.ContentProvider#delete(android.net.Uri, java.lang.String, java.lang.String[])
+	 * 
+	 * Delete rows from the database based on a URI and/or selection arguments
+	 * 
+	 * @param uri				URI requested, the table or entity to update
+	 * @param selection			The where clause requested ("_ID = ? and name = ? ...")
+	 * @param selectionArgs		Strings to replace ? with in selection (["1", "Bob" ...])
+	 */
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		String table = "";
@@ -193,11 +268,13 @@ public class DataProvider extends ContentProvider {
 			break;
 		case BOX_ID:
 			table = "Box";
+			//ignore the user's selection clause and values, the URI specifies the where clause we want
 			selection = "_ID = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		case OBSERVATIONS_ID:
 			table = "Observation";
+			//ignore the user's selection clause and values, the URI specifies the where clause we want
 			selection = "_ID = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
@@ -208,13 +285,21 @@ public class DataProvider extends ContentProvider {
 		
 		try{
 			SQLiteDatabase writableDB = db.getWritableDatabase();
-			return writableDB.delete(table, selection, selectionArgs);
+			int deleted = writableDB.delete(table, selection, selectionArgs);
+			getContext().getContentResolver().notifyChange(uri, null); //notify any listeners of change to database
+			return deleted;
 		} catch(SQLiteException e){
 			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}
 	
+	/*
+	 * @see android.content.ContentProvider#shutdown()
+	 * 
+	 * Called when shutting down the content provider, used to free up any resources or persist any data before the OS
+	 * shuts us down. Just a stub for now
+	 */
 	@Override
 	public void shutdown(){
 		super.shutdown();
