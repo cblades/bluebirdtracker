@@ -118,13 +118,13 @@ public class DataProvider extends ContentProvider {
 			break;
 		case OBSERVATIONS:
 			table = "Observation";
-			sort = "time " + ((sortOrder == null) ? "DESC" : sortOrder);
+			sort = "obs_date " + ((sortOrder == null) ? "DESC" : sortOrder);
 			sort += ", _ID " +  "ASC";
 			break;
 		case OBSERVATIONS_BOX_ID:
-			table = "Box b JOIN Observation o ON b._ID = o.box_key";
+			table = "Box b JOIN Observation o ON b._ID = o.box_id";
 			where = "box_key = " + uri.getLastPathSegment().toString();
-			sort = "time " + ((sortOrder == null) ? "DESC" : sortOrder);
+			sort = "obs_date " + ((sortOrder == null) ? "DESC" : sortOrder);
 			break;
 		case BOX_ID:
 			table = "Box";

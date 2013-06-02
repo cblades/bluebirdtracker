@@ -1,11 +1,37 @@
 CREATE TABLE Box(
-	_ID INTEGER PRIMARY KEY NOT NULL,
-	name TEXT,
-	location TEXT
+	_ID integer primary key, 
+	box_number varchar(20), 
+	box_type varchar(20), 
+	gps_coord varchar(50), 
+	condition varchar(50), 
+	loc_desc varchar(50)
 );
 CREATE TABLE Observation(
-	_ID INTEGER PRIMARY KEY NOT NULL,
-	box_key INTEGER,
-	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY(box_key)REFERENCES Box(_ID)
+	_ID integer primary key, 
+	obs_date datetime default current_date, 
+	problem varchar(50), 
+	prob_act varchar(50), 
+	species varchar(20), 
+	nest_perc varchar(5), 
+	eggs_laid integer, 
+	eggs_missing integer, 
+	eggs_destroyed integer, 
+	eggs_non_viable integer, 
+	orig_nestlings integer, 
+	nstlng_miss integer, 
+	nstlng_dead integer, 
+	nstlng_killed integer, 
+	nstlng_age integer, 
+	comments varchar(100), 
+	temp integer, 
+	first_egg_dt date, 
+	last_egg_dt date, 
+	do_not_mon_dt date, 
+	est_hatch_dt date, 
+	est_fledge_dt date, 
+	act_hatch_date date, 
+	act_fledge_date, 
+	fledged integer, 
+	session_desc varchar(20) default 'In Progress',
+	box_id integer, FOREIGN KEY(box_id) REFERENCES Box(_ID)
 );
