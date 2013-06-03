@@ -133,7 +133,6 @@ public class BoxListFragment extends ListFragment implements LoaderManager.Loade
         if (adapter != null) {
         	Cursor c = adapter.getCursor();
         	c.moveToPosition(position);
-        	
         	int boxId = c.getInt(c.getColumnIndex("_id"));
         	
         	Log.i(TAG, "onListItemClick() box_id = " + boxId);

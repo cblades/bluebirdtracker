@@ -1,5 +1,8 @@
 package bluebird.tracking;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -12,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import bluebird.tracking.dummy.DummyContent;
 
 /**
@@ -40,6 +44,8 @@ public class BoxDetailFragment extends ListFragment implements LoaderManager.Loa
      */
     private String boxId;
 
+    private SimpleCursorAdapter adapter;
+    
     /**
      * The current activated item position. Only used on tablets.
      */
@@ -113,12 +119,42 @@ public class BoxDetailFragment extends ListFragment implements LoaderManager.Loa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
     	Log.i(TAG, "onLoadFinished()");
-    	this.setListAdapter(new SimpleCursorAdapter(this.getActivity(), 
-    												R.layout.box_list_item, 
-    												cursor, 
-    												new String[] {"problem"}, 
-    												new int[] {R.id.box_list_item_title}, 
-    												0));
+    	adapter = new SimpleCursorAdapter(this.getActivity(), 
+				R.layout.observation_list_item, 
+				cursor, 
+				new String[] {"obs_date",
+    		                  "problem",
+    		                  "eggs_laid",
+    		                  "eggs_missing",
+    		                  "eggs_destroyed",
+    		                  "eggs_non_viable"}, 
+				new int[] {R.id.observation_date,
+    					   R.id.observation_problem,
+    					   R.id.observation_eggs_laid,
+    					   R.id.observation_eggs_missing,
+    					   R.id.observation_eggs_destroyed,
+    					   R.id.observation_eggs_non_viable}, 
+				0);
+    	
+    	// add a view binder just for the observation date
+    	adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+			private SimpleDateFormat format = new SimpleDateFormat("dd/LL/yy k:mm");
+    		
+			@Override
+			public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+				if (cursor.getColumnName(columnIndex).equals("obs_date")) {
+					Log.i(TAG, "setViewValue() date=" + cursor.getLong(columnIndex));
+					Date date = new Date(cursor.getLong(columnIndex));
+					Log.i(TAG, "setViewValue() date=" + date.toString());
+					((TextView) view).setText(format.format(date));
+					return true;
+				} else {
+					return false;
+				}
+			}
+		});
+    	
+    	this.setListAdapter(adapter);
     }
     
     @Override

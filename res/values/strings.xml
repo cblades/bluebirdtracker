@@ -3,5 +3,10 @@
 
     <string name="app_name">Blue Bird Tracking</string>
     <string name="title_box_detail">Box Detail</string>
+    <string name="eggs_laid">Laid:</string>
+    <string name="fledglings_label">Fledge:</string>
+    <string name="eggs_missing">Miss:</string>
+    <string name="eggs_destroyed">Dest:</string>
+    <string name="eggs_non_viable">N-Via:</string>
 
 </resources>
