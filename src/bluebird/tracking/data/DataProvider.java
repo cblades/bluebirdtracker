@@ -123,7 +123,7 @@ public class DataProvider extends ContentProvider {
 			break;
 		case OBSERVATIONS_BOX_ID:
 			table = "Box b JOIN Observation o ON b._ID = o.box_id";
-			where = "box_key = " + uri.getLastPathSegment().toString();
+			where = "box_id = " + uri.getLastPathSegment().toString();
 			sort = "obs_date " + ((sortOrder == null) ? "DESC" : sortOrder);
 			break;
 		case BOX_ID:

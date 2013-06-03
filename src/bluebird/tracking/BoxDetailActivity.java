@@ -2,8 +2,7 @@ package bluebird.tracking;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.NavUtils;
+import android.app.Activity;
 import android.view.MenuItem;
 
 /**
@@ -15,7 +14,7 @@ import android.view.MenuItem;
  * This activity is mostly just a 'shell' activity containing nothing
  * more than a {@link BoxDetailFragment}.
  */
-public class BoxDetailActivity extends FragmentActivity {
+public class BoxDetailActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +41,7 @@ public class BoxDetailActivity extends FragmentActivity {
                     getIntent().getStringExtra(BoxDetailFragment.ARG_ITEM_ID));
             BoxDetailFragment fragment = new BoxDetailFragment();
             fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
+            getFragmentManager().beginTransaction()
                     .add(R.id.box_detail_container, fragment)
                     .commit();
         }
@@ -59,7 +58,7 @@ public class BoxDetailActivity extends FragmentActivity {
                 //
                 // http://developer.android.com/design/patterns/navigation.html#up-vs-back
                 //
-                NavUtils.navigateUpTo(this, new Intent(this, BoxListActivity.class));
+                this.navigateUpTo(new Intent(this, BoxListActivity.class));
                 return true;
         }
         return super.onOptionsItemSelected(item);

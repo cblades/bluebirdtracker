@@ -6,5 +6,6 @@
     android:layout_height="match_parent"
     android:padding="16dp"
     android:textIsSelectable="true"
-    tools:context=".BoxDetailFragment" />
+    tools:context=".BoxDetailFragment" 
+    tools:layout="@android:layout/list_content"/>
 

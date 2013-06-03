@@ -1,11 +1,19 @@
 package bluebird.tracking;
 
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import android.app.ListFragment;
+import android.app.LoaderManager.LoaderCallbacks;
+import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 import bluebird.tracking.dummy.DummyContent;
 
@@ -18,14 +26,15 @@ import bluebird.tracking.dummy.DummyContent;
  * Activities containing this fragment MUST implement the {@link Callbacks}
  * interface.
  */
-public class BoxListFragment extends ListFragment {
-
+public class BoxListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
     /**
      * The serialization (saved instance state) Bundle key representing the
      * activated item position. Only used on tablets.
      */
     private static final String STATE_ACTIVATED_POSITION = "activated_position";
 
+    private static final String TAG = BoxListFragment.class.toString();
+    
     /**
      * The fragment's current callback object, which is notified of list item
      * clicks.
@@ -37,6 +46,8 @@ public class BoxListFragment extends ListFragment {
      */
     private int mActivatedPosition = ListView.INVALID_POSITION;
 
+    private CursorAdapter adapter;
+    
     /**
      * A callback interface that all activities containing this fragment must
      * implement. This mechanism allows activities to be notified of item
@@ -70,18 +81,24 @@ public class BoxListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: replace with a real list adapter.
+        /*/
         setListAdapter(new ArrayAdapter<DummyContent.DummyItem>(
                 getActivity(),
                 android.R.layout.simple_list_item_activated_1,
                 android.R.id.text1,
                 DummyContent.ITEMS));
+       //*/
+        
+       Log.i(TAG, "onCreate()"); 
+       getLoaderManager().initLoader(0, null, (LoaderCallbacks<Cursor>) this);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        
+        Log.i(TAG, "onViewCreated()");
+        
         // Restore the previously serialized activated item position.
         if (savedInstanceState != null
                 && savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
@@ -113,9 +130,17 @@ public class BoxListFragment extends ListFragment {
     public void onListItemClick(ListView listView, View view, int position, long id) {
         super.onListItemClick(listView, view, position, id);
 
-        // Notify the active callbacks interface (the activity, if the
-        // fragment is attached to one) that an item has been selected.
-        mCallbacks.onItemSelected(DummyContent.ITEMS.get(position).id);
+        if (adapter != null) {
+        	Cursor c = adapter.getCursor();
+        	c.moveToPosition(position);
+        	
+        	int boxId = c.getInt(c.getColumnIndex("_id"));
+        	
+        	Log.i(TAG, "onListItemClick() box_id = " + boxId);
+	        // Notify the active callbacks interface (the activity, if the
+	        // fragment is attached to one) that an item has been selected.
+	        mCallbacks.onItemSelected(boxId + "");
+        }
     }
 
     @Override
@@ -147,5 +172,32 @@ public class BoxListFragment extends ListFragment {
         }
 
         mActivatedPosition = position;
+    }
+
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+    	Log.i(TAG, "onCreateLoader()");
+        return new CursorLoader(getActivity(),
+                Uri.parse("content://bluebird.tracking.data/boxes")
+                , null, null, null, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+    	Log.i(TAG, "onLoadFinished()");
+    	adapter = new SimpleCursorAdapter(this.getActivity(), 
+				R.layout.box_list_item, 
+				cursor, 
+				new String[] {"box_number"}, 
+				new int[] {R.id.box_list_item_title}, 
+				0);
+    	
+    	this.setListAdapter(adapter);
+    }
+    
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+
     }
 }

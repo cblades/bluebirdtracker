@@ -2,7 +2,8 @@ package bluebird.tracking;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.app.Activity;
 
 
 /**
@@ -21,9 +22,11 @@ import android.support.v4.app.FragmentActivity;
  * {@link BoxListFragment.Callbacks} interface
  * to listen for item selections.
  */
-public class BoxListActivity extends FragmentActivity
+public class BoxListActivity extends Activity
         implements BoxListFragment.Callbacks {
 
+	private final static String TAG = BoxListActivity.class.toString();
+	
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -44,7 +47,7 @@ public class BoxListActivity extends FragmentActivity
 
             // In two-pane mode, list items should be given the
             // 'activated' state when touched.
-            ((BoxListFragment) getSupportFragmentManager()
+            ((BoxListFragment) getFragmentManager()
                     .findFragmentById(R.id.box_list))
                     .setActivateOnItemClick(true);
         }
@@ -59,6 +62,7 @@ public class BoxListActivity extends FragmentActivity
     @Override
     public void onItemSelected(String id) {
         if (mTwoPane) {
+        	Log.i(TAG, "onItemSelected() id=" + id);
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
@@ -66,7 +70,7 @@ public class BoxListActivity extends FragmentActivity
             arguments.putString(BoxDetailFragment.ARG_ITEM_ID, id);
             BoxDetailFragment fragment = new BoxDetailFragment();
             fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
+            getFragmentManager().beginTransaction()
                     .replace(R.id.box_detail_container, fragment)
                     .commit();
 

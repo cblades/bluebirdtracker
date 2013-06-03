@@ -20,7 +20,7 @@ import bluebird.tracking.enums.LogTags;
  * @version 1.0 May 31, 2013
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 	private static final String DATABASE = "bluebird";
 	private static final String DDL_FILENAME = "bluebird.sql";
 	private Context context;
@@ -100,6 +100,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// TODO actually implement this method
+		db.execSQL("drop table Box;");
+		db.execSQL("drop table Observation;");
 		onCreate(db);
 	}
 

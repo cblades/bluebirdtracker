@@ -1,5 +1,5 @@
 CREATE TABLE Box(
-	_ID integer primary key, 
+	_id integer primary key, 
 	box_number varchar(20), 
 	box_type varchar(20), 
 	gps_coord varchar(50), 
@@ -7,7 +7,7 @@ CREATE TABLE Box(
 	loc_desc varchar(50)
 );
 CREATE TABLE Observation(
-	_ID integer primary key, 
+	_id integer primary key, 
 	obs_date datetime default current_date, 
 	problem varchar(50), 
 	prob_act varchar(50), 
