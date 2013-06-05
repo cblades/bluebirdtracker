@@ -1,5 +1,5 @@
 CREATE TABLE Box(
-	_ID integer primary key, 
+	_id integer primary key autoincrement, 
 	box_number varchar(20), 
 	box_type varchar(20), 
 	gps_coord varchar(50), 
@@ -7,7 +7,7 @@ CREATE TABLE Box(
 	loc_desc varchar(50)
 );
 CREATE TABLE Observation(
-	_ID integer primary key, 
+	_id integer primary key autoincrement, 
 	obs_date datetime default current_date, 
 	problem varchar(50), 
 	prob_act varchar(50), 
@@ -33,5 +33,5 @@ CREATE TABLE Observation(
 	act_fledge_date, 
 	fledged integer, 
 	session_desc varchar(20) default 'In Progress',
-	box_id integer, FOREIGN KEY(box_id) REFERENCES Box(_ID)
+	box_id integer, FOREIGN KEY(box_id) REFERENCES Box(_id)
 );
