@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import bluebird.tracking.dummy.DummyContent;
 
 /**
@@ -15,8 +14,11 @@ import bluebird.tracking.dummy.DummyContent;
  * in two-pane mode (on tablets) or a {@link BoxDetailActivity}
  * on handsets.
  */
-public class BoxDetailFragment extends Fragment {
-    /**
+public class BoxDetailFragment extends Fragment{
+
+    
+	
+	/**
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
@@ -31,8 +33,7 @@ public class BoxDetailFragment extends Fragment {
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public BoxDetailFragment() {
-    }
+    public BoxDetailFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

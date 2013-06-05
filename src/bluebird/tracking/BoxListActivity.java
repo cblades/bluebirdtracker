@@ -1,8 +1,15 @@
 package bluebird.tracking;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
+import bluebird.tracking.constants.Constants;
+import bluebird.tracking.data.DataURI;
 
 
 /**
@@ -21,19 +28,59 @@ import android.support.v4.app.FragmentActivity;
  * {@link BoxListFragment.Callbacks} interface
  * to listen for item selections.
  */
-public class BoxListActivity extends FragmentActivity
-        implements BoxListFragment.Callbacks {
+public class BoxListActivity extends FragmentActivity implements 
+	BoxListFragment.Callbacks, 
+	LoaderManager.LoaderCallbacks<Cursor> 
+{
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
+    
+    /*
+     * Used to map data in a database (accessed via a Cursor) to our listview. Basically you
+     * tell how to map the data columns to views id's in the constructor (column A maps to 
+     * R.id.TextViewA...) 
+     */
+    SimpleCursorAdapter mAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_box_list);
+        
+        //instantiate the cursor adapter, telling it which data columns map to which view component id's
+        mAdapter = new SimpleCursorAdapter(
+	            this,                							// Current context
+	            android.R.layout.simple_list_item_activated_1,  // Layout for a single row
+	            null,                							// No Cursor yet
+	            new String[]{"box_number"},        				// Cursor columns to use
+	            new int[]{android.R.id.text1},           		// Layout fields to use
+	            0                   							 // No flags
+	    );
+        
+        /*
+         * get this activities fragment (which is the ListView) and set the ListAdapter to our newly
+         * created CursorAdapter. The ListView knows how to refresh the UI whenever it's data changes, 
+         * saving us alot of work.
+         */
+        ((BoxListFragment)getSupportFragmentManager().findFragmentById(R.id.box_list)).setListAdapter(mAdapter);
+        
+        /*
+         * Create a CursorLoader for querying our database. Longer running queries will cause the UI thread to 
+         * hang. The CursorLoader has it's own thread to run queries on so the UI doesnt hang. Whenever results 
+         * are ready from the query, this activities' onLoadFinished() method is called and we can do whatever 
+         * we need to do with the Cursor (data). See https://developer.android.com/training/load-data-background/setup-loader.html
+         * for more info
+         */
+        getSupportLoaderManager().initLoader(
+        		Constants.DataLoaderID.BOX_LIST_LOADER,		//ID of the Loader to use
+        		null, 										//arguments to pass to the CursorLoader
+        		this										//Object whose onLoadFinished() method to call
+        );
 
         if (findViewById(R.id.box_detail_container) != null) {
             // The detail container view will be present only in the
@@ -48,8 +95,6 @@ public class BoxListActivity extends FragmentActivity
                     .findFragmentById(R.id.box_list))
                     .setActivateOnItemClick(true);
         }
-
-        // TODO: If exposing deep links into your app, handle intents here.
     }
 
     /**
@@ -78,4 +123,51 @@ public class BoxListActivity extends FragmentActivity
             startActivity(detailIntent);
         }
     }
+    
+    /*
+     * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onCreateLoader(int, android.os.Bundle)
+     * 
+     * Creates a CursorLoader object based on the loaderID. We only care about creating a loader for
+     * boxes in this case, so we only handle the BOX_LIST_LOADER id.
+     * 
+     * @param loaderID	The ID of the loader to create
+     * @param bundle	Any extra arguments to pass to the method
+     * 
+     * @return			A CursorLoader which will asynchronously query our DataProvider
+     */
+	@Override
+	public Loader<Cursor> onCreateLoader(int loaderID, Bundle bundle) {
+		switch(loaderID){
+		case Constants.DataLoaderID.BOX_LIST_LOADER:
+			return new CursorLoader(this, DataURI.getAllBoxesURI(), null, null,null, null);
+		default:
+			return null;
+		}
+	}
+
+	/*
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoadFinished(android.support.v4.content.Loader, java.lang.Object)
+	 *
+	 * Called when the CursorLoader's query returns with data
+	 * 
+	 * @param loader	The CursorLoader which began the query
+	 * @param cursor	Cursor containing the requested data
+	 */
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		mAdapter.changeCursor(cursor); //we have our data now so we give it to our SimpleCursorAdapter 
+		
+	}
+
+	/*
+	 * @see android.support.v4.app.LoaderManager.LoaderCallbacks#onLoaderReset(android.support.v4.content.Loader)
+	 * 
+	 * Called the the Cursor becomes invalid (usually because the data associated with it has changed)
+	 * 
+	 * @param loader	The CursorLoader which began the query
+	 */
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+		mAdapter.changeCursor(null); //clear adapter's reference to the cursor (helps with memory leaks)
+	}
 }
