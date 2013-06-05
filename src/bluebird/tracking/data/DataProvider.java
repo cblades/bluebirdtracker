@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Log;
-import bluebird.tracking.enums.LogTags;
+import bluebird.tracking.constants.Constants;
 
 /*
  * A ContentProvider used to query, update, insert into and delete from our database using URI's
@@ -54,6 +54,7 @@ public class DataProvider extends ContentProvider {
 	 */
 	@Override
 	public boolean onCreate() {
+		Log.d(Constants.LogTags.CONTENT_PROVIDER, "Creating DataProvider");
 		db = new DatabaseHelper(getContext());		
 		return true;
 	}
@@ -85,7 +86,7 @@ public class DataProvider extends ContentProvider {
 			type = "vnd.android.cursor.item/com.bluebird.tracking.data.Observation";
 			break;
 		default:
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad type request for " + uri.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Bad type request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
 		return type;
@@ -114,28 +115,28 @@ public class DataProvider extends ContentProvider {
 		switch(uriMatcher.match(uri)){
 		case BOXES:
 			table = "Box";
-			sort = "_ID " + ((sortOrder == null) ? "ASC" : sortOrder);
+			sort = "_id " + ((sortOrder == null) ? "ASC" : sortOrder);
 			break;
 		case OBSERVATIONS:
 			table = "Observation";
 			sort = "obs_date " + ((sortOrder == null) ? "DESC" : sortOrder);
-			sort += ", _ID " +  "ASC";
+			sort += ", _id " +  "ASC";
 			break;
 		case OBSERVATIONS_BOX_ID:
-			table = "Box b JOIN Observation o ON b._ID = o.box_id";
+			table = "Box b JOIN Observation o ON b._id = o.box_id";
 			where = "box_key = " + uri.getLastPathSegment().toString();
 			sort = "obs_date " + ((sortOrder == null) ? "DESC" : sortOrder);
 			break;
 		case BOX_ID:
 			table = "Box";
-			where = "_ID = " + uri.getLastPathSegment().toString();
+			where = "_id = " + uri.getLastPathSegment().toString();
 			break;
 		case OBSERVATIONS_ID:
 			table = "Observation";
-			where = "_ID = " + uri.getLastPathSegment().toString();
+			where = "_id = " + uri.getLastPathSegment().toString();
 			break;
 		default:
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad query request for " + uri.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Bad query request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
 		
@@ -148,7 +149,7 @@ public class DataProvider extends ContentProvider {
 			c.setNotificationUri(getContext().getContentResolver(), uri);
 			return c;
 		} catch(SQLiteException e){
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}
@@ -175,7 +176,7 @@ public class DataProvider extends ContentProvider {
 			table = "Observation";
 			break;
 		default:
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad insert request for " + uri.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Bad insert request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
 		
@@ -190,7 +191,7 @@ public class DataProvider extends ContentProvider {
 			getContext().getContentResolver().notifyChange(newUri, null); //notify any listeners of change to database
 			return newUri;
 		} catch(SQLiteException e){
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}
@@ -221,17 +222,17 @@ public class DataProvider extends ContentProvider {
 		case BOX_ID:
 			table = "Box";
 			//ignore the user's selection clause and values, the URI specifies the where clause we want
-			selection = "_ID = ?"; 
+			selection = "_id = ?"; 
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		case OBSERVATIONS_ID:
 			table = "Observation";
 			//ignore the user's selection clause and values, the URI specifies the where clause we want
-			selection = "_ID = ?";
+			selection = "_id = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		default:
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad update request for " + uri.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Bad update request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
 		
@@ -241,7 +242,7 @@ public class DataProvider extends ContentProvider {
 			getContext().getContentResolver().notifyChange(uri, null); //notify any listeners of change to database
 			return changed;
 		} catch(SQLiteException e){
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}
@@ -269,17 +270,17 @@ public class DataProvider extends ContentProvider {
 		case BOX_ID:
 			table = "Box";
 			//ignore the user's selection clause and values, the URI specifies the where clause we want
-			selection = "_ID = ?";
+			selection = "_id = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		case OBSERVATIONS_ID:
 			table = "Observation";
 			//ignore the user's selection clause and values, the URI specifies the where clause we want
-			selection = "_ID = ?";
+			selection = "_id = ?";
 			selectionArgs = new String[] {uri.getLastPathSegment().toString()};
 			break;
 		default:
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Bad delete request for " + uri.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Bad delete request for " + uri.toString());
 			throw new IllegalArgumentException("Unknown URI " + uri.toString());
 		}
 		
@@ -289,7 +290,7 @@ public class DataProvider extends ContentProvider {
 			getContext().getContentResolver().notifyChange(uri, null); //notify any listeners of change to database
 			return deleted;
 		} catch(SQLiteException e){
-			Log.e(LogTags.CONTENT_PROVIDER.toString(), "Error opening database connection " + e.toString());
+			Log.e(Constants.LogTags.CONTENT_PROVIDER, "Error opening database connection " + e.toString());
 			throw new RuntimeException("Error opening database connection", e);
 		}
 	}

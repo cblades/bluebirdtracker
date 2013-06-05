@@ -7,10 +7,11 @@ import java.io.InputStreamReader;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import bluebird.tracking.enums.LogTags;
+import bluebird.tracking.constants.Constants;
 
 /*
  * A class to help with opening, creating and establishing a connection with the applicaiton's
@@ -23,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE = "bluebird";
 	private static final String DDL_FILENAME = "bluebird.sql";
+	private static final String STATIC_DATA_FILENAME = "data.sql";
 	private Context context;
 	private AssetManager assetManager;
 	
@@ -62,29 +64,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 */
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+		Log.d(Constants.LogTags.DATABASE, "Creating Database");
 		try {
 			if(assetManager == null)
 				assetManager = context.getAssets();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open(DDL_FILENAME)));
-			String line;
-			String stmtBuffer = "";
-			
-			//read the file line by line
-			while((line = reader.readLine()) != null){
-				stmtBuffer += line;
-				
-				//end of the sql statement, execute it and clear the buffer
-				if(stmtBuffer.endsWith(";")){
-					Log.d(LogTags.DATABASE.toString(), stmtBuffer);
-					db.execSQL(stmtBuffer);
-					stmtBuffer = "";
-				}
-			}
-			reader.close();
-		} catch (IOException e) {
+			executeFromFile(db, DDL_FILENAME);
+			executeFromFile(db, STATIC_DATA_FILENAME);
+		} catch (Exception e) {
 			e.printStackTrace();
-			Log.e(LogTags.DATABASE.toString(), e.toString());
+			Log.e(Constants.LogTags.DATABASE, e.toString());
 		}
+	}
+	
+	/*
+	 * Uses the AssetManager to open the specified file and execute the SQLite statements it contains
+	 * 
+	 * @param db		SQLiteDatabase to execute statements in
+	 * @param fileName	Name of file containing SQL commands (each statement ended with a ';')
+	 */
+	private void executeFromFile(SQLiteDatabase db, String fileName) throws IOException, SQLException{
+		BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open(fileName)));
+		String line;
+		String stmtBuffer = "";
+		
+		//read the file line by line
+		while((line = reader.readLine()) != null){
+			stmtBuffer += line;
+			
+			//end of the sql statement, execute it and clear the buffer
+			if(stmtBuffer.endsWith(";")){
+				Log.d(Constants.LogTags.DATABASE, stmtBuffer);
+				db.execSQL(stmtBuffer);
+				stmtBuffer = "";
+			}
+		}
+		reader.close();
 	}
 
 	/*
@@ -100,6 +114,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// TODO actually implement this method
+		Log.d(Constants.LogTags.DATABASE, String.format("Updating from Database version %d to %d", oldVersion, newVersion));
 		onCreate(db);
 	}
 
